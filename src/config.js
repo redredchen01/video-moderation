@@ -53,7 +53,7 @@ const flags = parseArgs();
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 
 export const CONFIG = {
-  baseUrl: 'https://dx-112-adm.ympxbys.xyz/admin/index/index',
+  baseUrl: process.env.SITE_URL || 'https://dx-112-adm.ympxbys.xyz/admin/index/index',
   credentials: {
     username: requireEnv('ADMIN_ACCOUNT'),
     password: requireEnv('ADMIN_PASSWORD'),
@@ -67,7 +67,7 @@ export const CONFIG = {
   latestJsonReportPath: 'output/violations.json',
   maxPages: flags.maxPages,
   coverDownloadConcurrency: 5,
-  menuLabel: '视频管理',
+  menuLabel: process.env.MENU_LABEL || '视频管理',
   headless: flags.headless,
   skipCovers: flags.skipCovers,
   skipDescriptions: flags.skipDescriptions,

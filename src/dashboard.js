@@ -240,6 +240,19 @@ function generateDashboard(stats) {
   .severity-summary { display: flex; justify-content: center; gap: 48px; margin: 16px 0; font-size: 16px; }
   .severity-summary .item { text-align: center; }
   .severity-summary .item .val { font-size: 32px; font-weight: 700; }
+
+  /* Search & Filter */
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-bar input[type="text"] { flex: 1; min-width: 200px; padding: 8px 12px; border-radius: 6px;
+    border: 1px solid #30363d; background: #0d1117; color: #e6edf3; font-size: 14px; outline: none; }
+  .filter-bar input[type="text"]:focus { border-color: #58a6ff; }
+  .filter-bar .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #30363d; background: #21262d;
+    color: #c9d1d9; cursor: pointer; font-size: 13px; transition: all 0.15s; }
+  .filter-bar .btn:hover { background: #30363d; }
+  .filter-bar .btn.active { background: #58a6ff; color: #0d1117; border-color: #58a6ff; }
+  .filter-bar .btn.active-v { background: #f85149; color: white; border-color: #f85149; }
+  .filter-bar .btn.active-r { background: #d29922; color: white; border-color: #d29922; }
+  .match-count { color: #8b949e; font-size: 13px; margin-left: auto; }
 </style>
 </head>
 <body>
@@ -292,7 +305,14 @@ function generateDashboard(stats) {
 <!-- Top Flagged Videos -->
 <div class="section">
   <h2>最高風險影片 Top 50</h2>
-  <table>
+  <div class="filter-bar">
+    <input type="text" id="searchTop" placeholder="搜尋 ID 或標題..." oninput="filterTable('topTable','searchTop','filterTop')">
+    <button class="btn active" data-filter="all" onclick="setFilter('filterTop',this,'topTable','searchTop')">全部</button>
+    <button class="btn" data-filter="violation" onclick="setFilter('filterTop',this,'topTable','searchTop')">VIOLATION</button>
+    <button class="btn" data-filter="risk" onclick="setFilter('filterTop',this,'topTable','searchTop')">RISK</button>
+    <span class="match-count" id="countTop"></span>
+  </div>
+  <table id="topTable">
     <thead><tr><th>ID</th><th>封面</th><th>標題</th><th>VIOLATION</th><th>RISK</th></tr></thead>
     <tbody>${topRows}</tbody>
   </table>
@@ -301,7 +321,11 @@ function generateDashboard(stats) {
 <!-- All Violations Table -->
 <div class="section">
   <h2>硬違規影片清單（前 100 筆）</h2>
-  <table>
+  <div class="filter-bar">
+    <input type="text" id="searchViol" placeholder="搜尋 ID、標題或標籤..." oninput="filterTable('violTable','searchViol','filterViol')">
+    <span class="match-count" id="countViol"></span>
+  </div>
+  <table id="violTable">
     <thead><tr><th>ID</th><th>封面</th><th>標題</th><th>標籤</th><th>VIOLATION</th><th>RISK</th></tr></thead>
     <tbody>${violationRows}</tbody>
   </table>
@@ -312,6 +336,53 @@ function generateDashboard(stats) {
 </footer>
 
 </div>
+<script>
+const filters = { filterTop: 'all', filterViol: 'all' };
+
+function setFilter(filterKey, btn, tableId, searchId) {
+  filters[filterKey] = btn.dataset.filter;
+  btn.parentElement.querySelectorAll('.btn').forEach(b => {
+    b.className = 'btn';
+  });
+  const f = btn.dataset.filter;
+  btn.className = 'btn ' + (f === 'all' ? 'active' : f === 'violation' ? 'active-v' : 'active-r');
+  filterTable(tableId, searchId, filterKey);
+}
+
+function filterTable(tableId, searchId, filterKey) {
+  const table = document.getElementById(tableId);
+  const searchInput = document.getElementById(searchId);
+  const query = (searchInput?.value || '').toLowerCase();
+  const severity = filters[filterKey] || 'all';
+  const rows = table.querySelectorAll('tbody tr');
+  let shown = 0;
+
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const matchSearch = !query || text.includes(query);
+    let matchFilter = true;
+
+    if (severity !== 'all') {
+      const isViolation = row.classList.contains('row-violation');
+      const isRisk = row.classList.contains('row-risk');
+      if (severity === 'violation') matchFilter = isViolation;
+      else if (severity === 'risk') matchFilter = isRisk && !isViolation;
+    }
+
+    const visible = matchSearch && matchFilter;
+    row.style.display = visible ? '' : 'none';
+    if (visible) shown++;
+  });
+
+  const countId = tableId === 'topTable' ? 'countTop' : 'countViol';
+  const countEl = document.getElementById(countId);
+  if (countEl) countEl.textContent = shown + ' / ' + rows.length + ' 筆';
+}
+
+// Init counts
+filterTable('topTable', 'searchTop', 'filterTop');
+filterTable('violTable', 'searchViol', 'filterViol');
+</script>
 </body>
 </html>`;
 }

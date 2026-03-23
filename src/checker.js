@@ -1,7 +1,35 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { matchBlacklist, matchRiskTerms } from './blacklist.js';
 
-const FULLWIDTH_RE = /[\uff01-\uff5e\u3000-\u303f\uff5f-\uff65]/;
-const SPECIAL_CHAR_RE = /[^\u4e00-\u9fff\u3400-\u4dbf\w\s.,!?;:'"()\-\/\\@#$%&*+=<>[\]{}|~`^]/;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_PATH = path.join(__dirname, '..', 'data', 'blacklist.json');
+
+// Load description rules from JSON (with sensible defaults)
+function loadDescriptionRules() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
+    const rules = raw.description_rules || {};
+    return {
+      flagEmpty: rules.flag_empty !== false,
+      flagFullwidth: rules.flag_fullwidth_punctuation !== false,
+      flagSpecialChars: rules.flag_special_chars !== false,
+      fullwidthRe: new RegExp(rules.fullwidth_regex || '[\\uff01-\\uff5e\\u3000-\\u303f\\uff5f-\\uff65]'),
+      specialCharRe: new RegExp(rules.special_char_regex || '[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\w\\s.,!?;:\'"()\\-\\/\\\\@#$%&*+=<>\\[\\]{}|~`^]'),
+    };
+  } catch {
+    return {
+      flagEmpty: true,
+      flagFullwidth: true,
+      flagSpecialChars: true,
+      fullwidthRe: /[\uff01-\uff5e\u3000-\u303f\uff5f-\uff65]/,
+      specialCharRe: /[^\u4e00-\u9fff\u3400-\u4dbf\w\s.,!?;:'"()\-\/\\@#$%&*+=<>[\]{}|~`^]/,
+    };
+  }
+}
+
+const descRules = loadDescriptionRules();
 
 const CHECK_FIELDS = [
   { field: 'title', flagType: 'title_blacklist', matcher: matchBlacklist, target: 'violations' },
@@ -14,11 +42,11 @@ const CHECK_FIELDS = [
 
 export function checkDescription(description) {
   const isEmpty = !description || description.trim().length === 0;
-  const hasFullwidthPunctuation = !isEmpty && FULLWIDTH_RE.test(description);
-  const hasSpecialChars = !isEmpty && SPECIAL_CHAR_RE.test(description);
+  const hasFullwidthPunctuation = !isEmpty && descRules.flagFullwidth && descRules.fullwidthRe.test(description);
+  const hasSpecialChars = !isEmpty && descRules.flagSpecialChars && descRules.specialCharRe.test(description);
 
   const issues = [];
-  if (isEmpty) issues.push('description is empty');
+  if (isEmpty && descRules.flagEmpty) issues.push('description is empty');
   if (hasFullwidthPunctuation) issues.push('contains fullwidth punctuation');
   if (hasSpecialChars) issues.push('contains special characters');
 
@@ -46,7 +74,6 @@ export function checkVideo(video) {
   }
 
   // Description format check — only if description was actually fetched
-  // (skip when description was never retrieved, e.g. --skip-descriptions or fetch failure)
   if (video.descriptionFetched) {
     const descResult = checkDescription(video.description);
     if (descResult.issues.length > 0) {

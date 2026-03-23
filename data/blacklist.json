@@ -51,5 +51,12 @@
       "继母", "继父", "后妈", "后爸", "岳母",
       "家庭乱", "亲生", "血亲"
     ]
+  },
+  "description_rules": {
+    "flag_empty": true,
+    "flag_fullwidth_punctuation": true,
+    "flag_special_chars": true,
+    "fullwidth_regex": "[\\uff01-\\uff5e\\u3000-\\u303f\\uff5f-\\uff65]",
+    "special_char_regex": "[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\w\\s.,!?;:'\"()\\-\\/\\\\@#$%&*+=<>\\[\\]{}|~`^]"
   }
 }
