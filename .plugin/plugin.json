@@ -1,0 +1,26 @@
+{
+  "name": "video-moderation",
+  "version": "1.0.0",
+  "description": "Video content moderation tool — automated compliance scanning for admin panels. Scrapes video metadata, checks against keyword blacklists, downloads covers for manual review, and generates HTML dashboard reports.",
+  "author": "dex",
+  "license": "ISC",
+  "keywords": ["moderation", "compliance", "video", "scraper", "playwright"],
+  "entry": "SKILL.md",
+  "runtime": "node",
+  "requires": {
+    "node": ">=18.0.0",
+    "playwright": true
+  },
+  "scripts": {
+    "setup": "scripts/setup.sh",
+    "scan": "scripts/scan.sh",
+    "dashboard": "scripts/dashboard.sh",
+    "edit-blacklist": "scripts/edit-blacklist.sh"
+  },
+  "env": {
+    "ADMIN_ACCOUNT": { "required": true, "description": "Admin panel username" },
+    "ADMIN_PASSWORD": { "required": true, "description": "Admin panel password" },
+    "ADMIN_CARD_NUM": { "required": false, "description": "Card number (if login page requires it)" },
+    "SITE_URL": { "required": false, "description": "Override admin panel base URL" }
+  }
+}

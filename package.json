@@ -1,0 +1,27 @@
+{
+  "name": "video-moderation",
+  "version": "1.0.0",
+  "description": "Automated video content moderation tool — keyword blacklist scanning, cover review, compliance reports",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "scan": "node src/main.js",
+    "scan:fast": "node src/main.js --skip-covers --skip-descriptions",
+    "scan:headless": "node src/main.js --headless",
+    "dashboard": "node src/dashboard.js",
+    "test": "node --test tests/*.test.js",
+    "setup": "bash scripts/setup.sh"
+  },
+  "keywords": ["moderation", "compliance", "video", "scraper", "playwright"],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "csv-writer": "^1.6.0",
+    "dotenv": "^17.3.1",
+    "playwright": "^1.58.2"
+  }
+}
